@@ -30,6 +30,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.IPowerManager;
 import android.os.Power;
 import android.os.PowerManager;
 import android.os.RemoteException;
@@ -137,6 +139,9 @@ public final class ShutdownThread extends Thread {
                         .setPositiveButton(com.android.internal.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 mReboot = true;
+                                if (mRebootReason != null && mRebootReason.equals("restart")) {
+                                    mRestart = true;
+                                }
                                 beginShutdownSequence(context);
                             }
                         })
@@ -304,34 +309,35 @@ public final class ShutdownThread extends Thread {
         };
 
         if (!mRestart) {
-		    /*
+            /*
              * Write a system property in case the system_server reboots before we
              * get to the actual hardware restart. If that happens, we'll retry at
              * the beginning of the SystemServer startup.
 			 */
             {
-			    String reason = (mReboot ? "1" : "0") + (mRebootReason != null ? mRebootReason : "");
-				SystemProperties.set(SHUTDOWN_ACTION_PROPERTY, reason);
+                String reason = (mReboot ? "1" : "0") + (mRebootReason != null ? mRebootReason : "");
+                SystemProperties.set(SHUTDOWN_ACTION_PROPERTY, reason);
             }
 
-        Log.i(TAG, "Sending shutdown broadcast...");
+            Log.i(TAG, "Sending shutdown broadcast...");
         
-        // First send the high-level shut down broadcast.
-        mActionDone = false;
-        mContext.sendOrderedBroadcast(new Intent(Intent.ACTION_SHUTDOWN), null,
-                br, mHandler, 0, null, null);
+            // First send the high-level shut down broadcast.
+            mActionDone = false;
+            mContext.sendOrderedBroadcast(new Intent(Intent.ACTION_SHUTDOWN), null,
+                    br, mHandler, 0, null, null);
         
-        final long endTime = SystemClock.elapsedRealtime() + MAX_BROADCAST_TIME;
-        synchronized (mActionDoneSync) {
-            while (!mActionDone) {
-                long delay = endTime - SystemClock.elapsedRealtime();
-                if (delay <= 0) {
-                    Log.w(TAG, "Shutdown broadcast timed out");
-                    break;
-                }
-                try {
-                    mActionDoneSync.wait(delay);
-                } catch (InterruptedException e) {
+            final long endTime = SystemClock.elapsedRealtime() + MAX_BROADCAST_TIME;
+            synchronized (mActionDoneSync) {
+                while (!mActionDone) {
+                    long delay = endTime - SystemClock.elapsedRealtime();
+                    if (delay <= 0) {
+                        Log.w(TAG, "Shutdown broadcast timed out");
+                        break;
+                    }
+                    try {
+                        mActionDoneSync.wait(delay);
+                    } catch (InterruptedException e) {
+					}
                 }
             }
         }
