@@ -337,7 +337,7 @@ public final class ShutdownThread extends Thread {
                     try {
                         mActionDoneSync.wait(delay);
                     } catch (InterruptedException e) {
-					}
+                    }
                 }
             }
         }
@@ -516,7 +516,7 @@ public final class ShutdownThread extends Thread {
                 }
             }
             // normal reboot
-			try {
+            try {
                 Power.reboot(reason);
             } catch (Exception e) {
                 Log.e(TAG, "Reboot failed, will attempt shutdown instead", e);
