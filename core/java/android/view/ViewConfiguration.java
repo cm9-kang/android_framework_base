@@ -31,14 +31,14 @@ import android.util.SparseArray;
 public class ViewConfiguration {
     /**
      * Expected bit depth of the display panel.
-     * 
+     *
      * @hide
      */
     public static final float PANEL_BIT_DEPTH = 24;
 
     /**
      * Minimum alpha required for a view to draw.
-     * 
+     *
      * @hide
      */
     public static final float ALPHA_THRESHOLD = 0.5f / PANEL_BIT_DEPTH;
@@ -72,7 +72,7 @@ public class ViewConfiguration {
      * Defines the duration in milliseconds of the pressed state in child
      * components.
      */
-    private static final int PRESSED_STATE_DURATION = 125;
+    private static final int PRESSED_STATE_DURATION = 64;
     
     /**
      * Defines the default duration in milliseconds before a press turns into
@@ -93,9 +93,9 @@ public class ViewConfiguration {
     private static final int GLOBAL_ACTIONS_KEY_TIMEOUT = 500;
     
     /**
-     * Defines the duration in milliseconds we will wait to see if a touch event 
+     * Defines the duration in milliseconds we will wait to see if a touch event
      * is a tap or a scroll. If the user does not move within this interval, it is
-     * considered to be a tap. 
+     * considered to be a tap.
      */
     private static final int TAP_TIMEOUT = 180;
     
@@ -179,12 +179,14 @@ public class ViewConfiguration {
     /**
      * Minimum velocity to initiate a fling, as measured in pixels per second
      */
-    private static final int MINIMUM_FLING_VELOCITY = 50;
+    private static final int MINIMUM_FLING_VELOCITY
+            = SystemProperties.getInt("ro.min.fling_velocity", 50);
     
     /**
      * Maximum velocity to initiate a fling, as measured in pixels per second
      */
-    private static final int MAXIMUM_FLING_VELOCITY = 8000;
+    private static final int MAXIMUM_FLING_VELOCITY
+            = SystemProperties.getInt("ro.max.fling_velocity", 10000);
 
     /**
      * Distance between a touch up event denoting the end of a touch exploration
@@ -671,7 +673,7 @@ public class ViewConfiguration {
 
     /**
      * The amount of friction applied to scrolls and flings.
-     * 
+     *
      * @return A scalar dimensionless value representing the coefficient of
      *         friction.
      */
