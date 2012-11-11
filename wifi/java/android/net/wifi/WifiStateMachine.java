@@ -552,11 +552,6 @@ public class WifiStateMachine extends StateMachine {
     private final WorkSource mLastRunningWifiUids = new WorkSource();
 
     private final IBatteryStats mBatteryStats;
-    private boolean mNextWifiActionExplicit = false;
-    private int mLastExplicitNetworkId;
-    private long mLastNetworkChoiceTime;
-    private static final long EXPLICIT_CONNECT_ALLOWED_DELAY_MS = 2 * 60 * 1000;
-
 
     public WifiStateMachine(Context context, String wlanInterface) {
         super(TAG);
@@ -1674,7 +1669,6 @@ public class WifiStateMachine extends StateMachine {
         mWifiInfo.setNetworkId(WifiConfiguration.INVALID_NETWORK_ID);
         mWifiInfo.setRssi(MIN_RSSI);
         mWifiInfo.setLinkSpeed(-1);
-        mWifiInfo.setExplicitConnect(false);
 
         /* send event to CM & network change broadcast */
         setNetworkDetailedState(DetailedState.DISCONNECTED);
@@ -2919,10 +2913,6 @@ public class WifiStateMachine extends StateMachine {
                     mSupplicantStateTracker.sendMessage(CMD_CONNECT_NETWORK);
 
                     WifiNative.reconnectCommand();
-                    mLastExplicitNetworkId = netId;
-                    mLastNetworkChoiceTime  = SystemClock.elapsedRealtime();
-                    mNextWifiActionExplicit = true;
-                    if (DBG) log("Setting wifi connect explicit for netid " + netId);
                     /* Expect a disconnection from the old connection */
                     transitionTo(mDisconnectingState);
                     break;
@@ -2944,13 +2934,6 @@ public class WifiStateMachine extends StateMachine {
                     mWifiInfo.setSSID(fetchSSID());
                     mWifiInfo.setBSSID(mLastBssid);
                     mWifiInfo.setNetworkId(mLastNetworkId);
-                    if (mNextWifiActionExplicit &&
-                        mWifiInfo.getNetworkId() == mLastExplicitNetworkId &&
-                        SystemClock.elapsedRealtime() < mLastNetworkChoiceTime +
-                                                            EXPLICIT_CONNECT_ALLOWED_DELAY_MS) {
-                        mWifiInfo.setExplicitConnect(true);
-                    }
-                    mNextWifiActionExplicit = false;
                     /* send event to CM & network change broadcast */
                     setNetworkDetailedState(DetailedState.OBTAINING_IPADDR);
                     sendNetworkStateChangeBroadcast(mLastBssid);
