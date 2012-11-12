@@ -257,6 +257,7 @@ public class MultiWaveView extends View {
         }
 
         a.recycle();
+
         final ContentResolver resolver = context.getContentResolver();
         boolean vibrateEnabled = Settings.System.getInt(resolver,Settings.System.LOCKSCREEN_VIBRATE_ENABLED, 1) == 1;
         setVibrateEnabled(vibrateEnabled ? mVibrationDuration > 0 : false);
