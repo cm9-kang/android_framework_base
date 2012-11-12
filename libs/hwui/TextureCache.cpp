@@ -253,8 +253,9 @@ void TextureCache::generateTexture(SkBitmap* bitmap, Texture* texture, bool rege
     }
 
     if (!regenerate) {
-        texture->setFilter(GL_LINEAR);
+        texture->setFilter(GL_NEAREST);
         texture->setWrap(GL_CLAMP_TO_EDGE);
+    }
 }
 
 void TextureCache::uploadLoFiTexture(bool resize, SkBitmap* bitmap,
