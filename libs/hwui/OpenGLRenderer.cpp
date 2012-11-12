@@ -1544,8 +1544,7 @@ void OpenGLRenderer::drawBitmap(SkBitmap* bitmap,
                 &mMeshVertices[0].position[0], &mMeshVertices[0].texture[0],
                 GL_TRIANGLE_STRIP, gMeshCount, false, true);
     } else {
-        texture->setFilter(FILTER(paint) true);
-
+        texture->setFilter(FILTER(paint), true);
         drawTextureMesh(dstLeft, dstTop, dstRight, dstBottom, texture->id, alpha / 255.0f,
                 mode, texture->blend, &mMeshVertices[0].position[0], &mMeshVertices[0].texture[0],
                 GL_TRIANGLE_STRIP, gMeshCount);
