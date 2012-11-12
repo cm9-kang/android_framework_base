@@ -2140,6 +2140,11 @@ public final class Settings {
         public static final String LOCKSCREEN_SOUNDS_ENABLED = "lockscreen_sounds_enabled";
 
         /**
+         * Whether the lockscreen vibrate should be enabled.
+         * @hide
+        public static final String LOCKSCREEN_VIBRATE_ENABLED = "lockscreen.vibrate_enabled";
+
+        /**
          * URI for the low battery sound file.
          * @hide
          */
