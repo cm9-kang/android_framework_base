@@ -2142,6 +2142,7 @@ public final class Settings {
         /**
          * Whether the lockscreen vibrate should be enabled.
          * @hide
+         */
         public static final String LOCKSCREEN_VIBRATE_ENABLED = "lockscreen.vibrate_enabled";
 
         /**
