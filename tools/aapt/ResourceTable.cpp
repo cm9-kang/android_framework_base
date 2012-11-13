@@ -9,6 +9,7 @@
 
 #include "XMLNode.h"
 #include "ResourceFilter.h"
+#include "ResourceIdCache.h"
 
 #include <utils/ByteOrder.h>
 #include <utils/ResourceTypes.h>
