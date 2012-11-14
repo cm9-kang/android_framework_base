@@ -467,7 +467,7 @@ public class RecentsPanelView extends RelativeLayout implements OnItemClickListe
 	         * Make sure mShowing is false when view is not visible.*/
 	        if (getVisibility() != VISIBLE)
 	            mShowing = false;
-				
+
         if (!mShowing) {
             int action = ev.getAction() & MotionEvent.ACTION_MASK;
             if (action == MotionEvent.ACTION_DOWN) {

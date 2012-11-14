@@ -925,7 +925,7 @@ void OpenGLRenderer::clearLayerRegions() {
         setupDrawModelViewTranslate(0.0f, 0.0f, 0.0f, 0.0f, true);
 
         mCaches.unbindMeshBuffer();
-		
+
         glVertexAttribPointer(mCaches.currentProgram->position, 2, GL_FLOAT, GL_FALSE,
                 gVertexStride, &mesh[0].position[0]);
         glDrawArrays(GL_TRIANGLES, 0, count * 6);
@@ -1250,7 +1250,7 @@ void OpenGLRenderer::setupDrawMesh(GLvoid* vertices, GLvoid* texCoords, GLuint v
     } else {
         mCaches.unbindMeshBuffer();
     }
-	
+
     glVertexAttribPointer(mCaches.currentProgram->position, 2, GL_FLOAT, GL_FALSE,
             gMeshStride, vertices);
     if (mTexCoordsSlot >= 0) {
@@ -1260,10 +1260,10 @@ void OpenGLRenderer::setupDrawMesh(GLvoid* vertices, GLvoid* texCoords, GLuint v
 
 void OpenGLRenderer::setupDrawVertices(GLvoid* vertices) {
     mCaches.unbindMeshBuffer();
-	
+
     glVertexAttribPointer(mCaches.currentProgram->position, 2, GL_FLOAT, GL_FALSE,
             gVertexStride, vertices);
-			
+
 }
 
 /**
@@ -1282,18 +1282,18 @@ void OpenGLRenderer::setupDrawAALine(GLvoid* vertices, GLvoid* widthCoords,
     mCaches.unbindMeshBuffer();
     glVertexAttribPointer(mCaches.currentProgram->position, 2, GL_FLOAT, GL_FALSE,
             gAAVertexStride, vertices);
-			
+
     int widthSlot = mCaches.currentProgram->getAttrib("vtxWidth");
     glEnableVertexAttribArray(widthSlot);
     glVertexAttribPointer(widthSlot, 1, GL_FLOAT, GL_FALSE, gAAVertexStride, widthCoords);
     int lengthSlot = mCaches.currentProgram->getAttrib("vtxLength");
-	
+
     glEnableVertexAttribArray(lengthSlot);
     glVertexAttribPointer(lengthSlot, 1, GL_FLOAT, GL_FALSE, gAAVertexStride, lengthCoords);
-	
+
     int boundaryWidthSlot = mCaches.currentProgram->getUniform("boundaryWidth");
     glUniform1f(boundaryWidthSlot, boundaryWidthProportion);
-	
+
     // Setting the inverse value saves computations per-fragment in the shader
     int inverseBoundaryWidthSlot = mCaches.currentProgram->getUniform("inverseBoundaryWidth");
     glUniform1f(inverseBoundaryWidthSlot, (1 / boundaryWidthProportion));

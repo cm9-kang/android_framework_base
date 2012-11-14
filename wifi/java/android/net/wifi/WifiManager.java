@@ -418,7 +418,7 @@ public class WifiManager {
      * @hide
      */
     public static final int RSSI_LEVELS = 5;
-	
+
     /**
      * Auto settings in the driver. The driver could choose to operate on both
      * 2.4 GHz and 5 GHz or make a dynamic decision on selecting the band.
