@@ -141,13 +141,9 @@ void OpenGLRenderer::setViewport(int width, int height) {
     mFirstSnapshot->height = height;
     mFirstSnapshot->viewport.set(0, 0, width, height);
 
-    mDirtyClip = false;
-
     glDisable(GL_DITHER);
-    glViewport(0, 0, width, height);
-
+    glEnable(GL_SCISSOR_TEST);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
     glEnableVertexAttribArray(Program::kBindingPosition);
 }
 
@@ -168,12 +164,13 @@ void OpenGLRenderer::prepareDirty(float left, float top, float right, float bott
     mSnapshot = new Snapshot(mFirstSnapshot,
             SkCanvas::kMatrix_SaveFlag | SkCanvas::kClip_SaveFlag);
     mSnapshot->fbo = getTargetFbo();
-
     mSaveCount = 1;
 
-    glEnable(GL_SCISSOR_TEST);
+    glViewport(0, 0, mWidth, mHeight);
     glScissor(left, mSnapshot->height - bottom, right - left, bottom - top);
+
     mSnapshot->setClip(left, top, right, bottom);
+    mDirtyClip = false;
 
 #ifdef QCOM_HARDWARE
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -214,24 +211,20 @@ void OpenGLRenderer::interrupt() {
         }
     }
     mCaches.unbindMeshBuffer();
+    mCaches.resetVertexPointers();
 }
 
 void OpenGLRenderer::resume() {
     sp<Snapshot> snapshot = (mSnapshot != NULL) ? mSnapshot : mFirstSnapshot;
 
     glViewport(0, 0, snapshot->viewport.getWidth(), snapshot->viewport.getHeight());
-
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     glEnable(GL_SCISSOR_TEST);
     dirtyClip();
 
-    glDisable(GL_DITHER);
-
     glBindFramebuffer(GL_FRAMEBUFFER, snapshot->fbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    glEnableVertexAttribArray(Program::kBindingPosition);
 
     mCaches.blend = true;
     glEnable(GL_BLEND);
@@ -929,11 +922,8 @@ void OpenGLRenderer::clearLayerRegions() {
         setupDrawProgram();
         setupDrawPureColorUniforms();
         setupDrawModelViewTranslate(0.0f, 0.0f, 0.0f, 0.0f, true);
+        setupDrawVertices(&mesh[0].position[0]);
 
-        mCaches.unbindMeshBuffer();
-
-        glVertexAttribPointer(mCaches.currentProgram->position, 2, GL_FLOAT, GL_FALSE,
-                gVertexStride, &mesh[0].position[0]);
         glDrawArrays(GL_TRIANGLES, 0, count * 6);
 
         glEnable(GL_SCISSOR_TEST);
@@ -1220,16 +1210,15 @@ void OpenGLRenderer::setupDrawColorFilterUniforms() {
 }
 
 void OpenGLRenderer::setupDrawSimpleMesh() {
-    mCaches.bindMeshBuffer();
-    glVertexAttribPointer(mCaches.currentProgram->position, 2, GL_FLOAT, GL_FALSE,
-            gMeshStride, 0);
+    bool force = mCaches.bindMeshBuffer();
+    mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position, 0);
 }
 
 void OpenGLRenderer::setupDrawTexture(GLuint texture) {
     bindTexture(texture);
     glUniform1i(mCaches.currentProgram->getUniform("sampler"), mTextureUnit++);
 
-    mTexCoordsSlot = mCaches.currentProgram->getAttrib("texCoords");
+    mTexCoordsSlot = mCaches.currentProgram->texCoords;
     glEnableVertexAttribArray(mTexCoordsSlot);
 }
 
@@ -1237,7 +1226,7 @@ void OpenGLRenderer::setupDrawExternalTexture(GLuint texture) {
     bindExternalTexture(texture);
     glUniform1i(mCaches.currentProgram->getUniform("sampler"), mTextureUnit++);
 
-    mTexCoordsSlot = mCaches.currentProgram->getAttrib("texCoords");
+    mTexCoordsSlot = mCaches.currentProgram->texCoords;
     glEnableVertexAttribArray(mTexCoordsSlot);
 }
 
@@ -1251,24 +1240,23 @@ void OpenGLRenderer::setupDrawTextureTransformUniforms(mat4& transform) {
 }
 
 void OpenGLRenderer::setupDrawMesh(GLvoid* vertices, GLvoid* texCoords, GLuint vbo) {
+    bool force = false;
     if (!vertices) {
-        mCaches.bindMeshBuffer(vbo == 0 ? mCaches.meshBuffer : vbo);
+        force = mCaches.bindMeshBuffer(vbo == 0 ? mCaches.meshBuffer : vbo);
     } else {
-        mCaches.unbindMeshBuffer();
+        force = mCaches.unbindMeshBuffer();
     }
 
-    glVertexAttribPointer(mCaches.currentProgram->position, 2, GL_FLOAT, GL_FALSE,
-            gMeshStride, vertices);
+    mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position, vertices)
     if (mTexCoordsSlot >= 0) {
-        glVertexAttribPointer(mTexCoordsSlot, 2, GL_FLOAT, GL_FALSE, gMeshStride, texCoords);
+        mCaches.bindTexCoordsVertexPointer(force, mTexCoordsSlot, texCoords);
     }
 }
 
 void OpenGLRenderer::setupDrawVertices(GLvoid* vertices) {
-    mCaches.unbindMeshBuffer();
-
-    glVertexAttribPointer(mCaches.currentProgram->position, 2, GL_FLOAT, GL_FALSE,
-            gVertexStride, vertices);
+    bool force = mCaches.unbindMeshBuffer();
+    mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position,
+            vertices, gVertexStride);
 
 }
 
@@ -1285,9 +1273,10 @@ void OpenGLRenderer::setupDrawVertices(GLvoid* vertices) {
  */
 void OpenGLRenderer::setupDrawAALine(GLvoid* vertices, GLvoid* widthCoords,
         GLvoid* lengthCoords, float boundaryWidthProportion) {
-    mCaches.unbindMeshBuffer();
-    glVertexAttribPointer(mCaches.currentProgram->position, 2, GL_FLOAT, GL_FALSE,
-            gAAVertexStride, vertices);
+    bool force = mCaches.unbindMeshBuffer();
+    mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position,
+            vertices, gAAVertexStride);
+    mCaches.resetTexCoordsVertexPointer();
 
     int widthSlot = mCaches.currentProgram->getAttrib("vtxWidth");
     glEnableVertexAttribArray(widthSlot);
@@ -2203,12 +2192,14 @@ void OpenGLRenderer::drawText(const char* text, int bytesCount, int count,
 #else
     bool hasActiveLayer = false;
 #endif
-    mCaches.unbindMeshBuffer();
 
-    // Tell font renderer the locations of position and texture coord
-    // attributes so it can bind its data properly
-    int positionSlot = mCaches.currentProgram->position;
-    fontRenderer.setAttributeBindingSlots(positionSlot, mTexCoordsSlot);
+    float* buffer = fontRenderer.getMeshBuffer();
+    int offset = fontRenderer.getMeshTexCoordsOffset();
+
+    bool force = mCaches.unbindMeshBuffer();
+    mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position, buffer);
+    mCaches.bindTexCoordsVertexPointer(force, mTexCoordsSlot, buffer + offset);
+
     if (fontRenderer.renderText(paint, clip, text, 0, bytesCount, count, x, y,
             hasActiveLayer ? &bounds : NULL)) {
 #if RENDER_LAYERS_AS_REGIONS
@@ -2222,7 +2213,7 @@ void OpenGLRenderer::drawText(const char* text, int bytesCount, int count,
     }
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArray(mCaches.currentProgram->getAttrib("texCoords"));
+    glDisableVertexAttribArray(mCaches.currentProgram->texCoords);
 
     drawTextDecorations(text, bytesCount, length, oldX, oldY, paint);
 }
