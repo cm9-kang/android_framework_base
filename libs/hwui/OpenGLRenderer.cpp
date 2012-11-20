@@ -1251,7 +1251,7 @@ void OpenGLRenderer::setupDrawMesh(GLvoid* vertices, GLvoid* texCoords, GLuint v
         force = mCaches.unbindMeshBuffer();
     }
 
-    mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position, vertices)
+    mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position, vertices);
     if (mTexCoordsSlot >= 0) {
         mCaches.bindTexCoordsVertexPointer(force, mTexCoordsSlot, texCoords);
     }
