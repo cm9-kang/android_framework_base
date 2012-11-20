@@ -957,7 +957,11 @@ void OpenGLRenderer::skew(float sx, float sy) {
 }
 
 void OpenGLRenderer::setMatrix(SkMatrix* matrix) {
-    mSnapshot->transform->load(*matrix);
+    if (matrix) {
+        mSnapshot->transform->load(*matrix);
+    } else {
+        mSnapshot->transform->loadIdentity();
+    }
 }
 
 void OpenGLRenderer::getMatrix(SkMatrix* matrix) {
@@ -1277,15 +1281,12 @@ void OpenGLRenderer::setupDrawAALine(GLvoid* vertices, GLvoid* widthCoords,
     mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position,
             vertices, gAAVertexStride);
     mCaches.resetTexCoordsVertexPointer();
-
     int widthSlot = mCaches.currentProgram->getAttrib("vtxWidth");
     glEnableVertexAttribArray(widthSlot);
     glVertexAttribPointer(widthSlot, 1, GL_FLOAT, GL_FALSE, gAAVertexStride, widthCoords);
     int lengthSlot = mCaches.currentProgram->getAttrib("vtxLength");
-
     glEnableVertexAttribArray(lengthSlot);
     glVertexAttribPointer(lengthSlot, 1, GL_FLOAT, GL_FALSE, gAAVertexStride, lengthCoords);
-
     int boundaryWidthSlot = mCaches.currentProgram->getUniform("boundaryWidth");
     glUniform1f(boundaryWidthSlot, boundaryWidthProportion);
 
@@ -1422,7 +1423,7 @@ void OpenGLRenderer::drawBitmapMesh(SkBitmap* bitmap, int meshWidth, int meshHei
     const AutoTexture autoCleanup(texture);
 
     texture->setWrap(GL_CLAMP_TO_EDGE, true);
-    texture->setFilter(GL_LINEAR, true);
+    texture->setFilter(FILTER(paint), true);
 
     int alpha;
     SkXfermode::Mode mode;
