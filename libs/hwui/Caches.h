@@ -159,6 +159,9 @@ public:
      */
     bool unbindMeshBuffer();
 
+    bool bindIndicesBuffer(const GLuint buffer);
+    bool unbindIndicesBuffer();
+
     /**
      * Binds an attrib to the specified float vertex pointer.
      * Assumes a stride of gMeshStride and a size of 2.
@@ -177,6 +180,9 @@ public:
      */
     void resetVertexPointers();
     void resetTexCoordsVertexPointer();
+
+    void enableTexCoordsVertexArray();
+    void disbaleTexCoordsVertexArray();
 
     /**
      * Returns the mesh used to draw regions. Calling this method will
@@ -223,8 +229,11 @@ public:
 
 private:
     GLuint mCurrentBuffer;
+    GLuint mCurrentIndicesBuffer;
     void* mCurrentPositionPointer;
     void* mCurrentTexCoordsPointer;
+
+    bool mTexCoordsArrayEnabled;
 
     // Used to render layers
     TextureVertex* mRegionMesh;

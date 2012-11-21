@@ -144,6 +144,7 @@ void OpenGLRenderer::setViewport(int width, int height) {
     glDisable(GL_DITHER);
     glEnable(GL_SCISSOR_TEST);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
     glEnableVertexAttribArray(Program::kBindingPosition);
 }
 
@@ -211,7 +212,9 @@ void OpenGLRenderer::interrupt() {
         }
     }
     mCaches.unbindMeshBuffer();
+    mCaches.unbindIndicesBuffer();
     mCaches.resetVertexPointers();
+    mCaches.disbaleTexCoordsVertexArray();
 }
 
 void OpenGLRenderer::resume() {
@@ -224,7 +227,6 @@ void OpenGLRenderer::resume() {
     dirtyClip();
 
     glBindFramebuffer(GL_FRAMEBUFFER, snapshot->fbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     mCaches.blend = true;
     glEnable(GL_BLEND);
@@ -784,7 +786,7 @@ void OpenGLRenderer::composeLayerRegion(Layer* layer, const Rect& rect) {
             layer->setFilter(GL_LINEAR);
             setupDrawModelViewTranslate(rect.left, rect.top, rect.right, rect.bottom);
         }
-        setupDrawMesh(&mesh[0].position[0], &mesh[0].texture[0]);
+        setupDrawMeshIndices(&mesh[0].position[0], &mesh[0].texture[0]);
 
         for (size_t i = 0; i < count; i++) {
             const android::Rect* r = &rects[i];
@@ -813,7 +815,6 @@ void OpenGLRenderer::composeLayerRegion(Layer* layer, const Rect& rect) {
             glDrawElements(GL_TRIANGLES, numQuads * 6, GL_UNSIGNED_SHORT, NULL);
         }
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         finishDrawTexture();
 
 #if DEBUG_LAYERS_AS_REGIONS
@@ -1028,7 +1029,6 @@ void OpenGLRenderer::setupDraw(bool clear) {
     mColorA = mColorR = mColorG = mColorB = 0.0f;
     mTextureUnit = 0;
     mTrackDirtyRegions = true;
-    mTexCoordsSlot = -1;
 }
 
 void OpenGLRenderer::setupDrawWithTexture(bool isAlpha8) {
@@ -1038,6 +1038,10 @@ void OpenGLRenderer::setupDrawWithTexture(bool isAlpha8) {
 
 void OpenGLRenderer::setupDrawWithExternalTexture() {
     mDescription.hasExternalTexture = true;
+}
+
+void OpenGLRenderer::setupDrawNoTexture() {
+    mCaches.disbaleTexCoordsVertexArray();
 }
 
 void OpenGLRenderer::setupDrawAALine() {
@@ -1216,22 +1220,19 @@ void OpenGLRenderer::setupDrawColorFilterUniforms() {
 void OpenGLRenderer::setupDrawSimpleMesh() {
     bool force = mCaches.bindMeshBuffer();
     mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position, 0);
+    mCaches.unbindIndicesBuffer();
 }
 
 void OpenGLRenderer::setupDrawTexture(GLuint texture) {
     bindTexture(texture);
     glUniform1i(mCaches.currentProgram->getUniform("sampler"), mTextureUnit++);
-
-    mTexCoordsSlot = mCaches.currentProgram->texCoords;
-    glEnableVertexAttribArray(mTexCoordsSlot);
+    mCaches.enableTexCoordsVertexArray();
 }
 
 void OpenGLRenderer::setupDrawExternalTexture(GLuint texture) {
     bindExternalTexture(texture);
     glUniform1i(mCaches.currentProgram->getUniform("sampler"), mTextureUnit++);
-
-    mTexCoordsSlot = mCaches.currentProgram->texCoords;
-    glEnableVertexAttribArray(mTexCoordsSlot);
+    mCaches.enableTexCoordsVertexArray();
 }
 
 void OpenGLRenderer::setupDrawTextureTransform() {
@@ -1252,8 +1253,18 @@ void OpenGLRenderer::setupDrawMesh(GLvoid* vertices, GLvoid* texCoords, GLuint v
     }
 
     mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position, vertices);
-    if (mTexCoordsSlot >= 0) {
-        mCaches.bindTexCoordsVertexPointer(force, mTexCoordsSlot, texCoords);
+    if (mCaches.currentProgram->texCoords >= 0) {
+        mCaches.bindTexCoordsVertexPointer(force, mCaches.currentProgram->texCoords, texCoords);
+    }
+
+    mCaches.unbindIndicesBuffer();
+}
+
+void OpenGLRenderer::setupDrawMeshIndices(GLvoid* vertices, GLvoid* texCoords) {
+    bool force = mCaches.unbindMeshBuffer();
+    mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position, vertices);
+    if (mCaches.currentProgram->texCoords >= 0) {
+        mCaches.bindTexCoordsVertexPointer(force, mCaches.currentProgram->texCoords, texCoords);
     }
 }
 
@@ -1261,7 +1272,7 @@ void OpenGLRenderer::setupDrawVertices(GLvoid* vertices) {
     bool force = mCaches.unbindMeshBuffer();
     mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position,
             vertices, gVertexStride);
-
+    mCaches.unbindIndicesBuffer();
 }
 
 /**
@@ -1281,6 +1292,7 @@ void OpenGLRenderer::setupDrawAALine(GLvoid* vertices, GLvoid* widthCoords,
     mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position,
             vertices, gAAVertexStride);
     mCaches.resetTexCoordsVertexPointer();
+    mCaches.unbindIndicesBuffer();
     int widthSlot = mCaches.currentProgram->getAttrib("vtxWidth");
     glEnableVertexAttribArray(widthSlot);
     glVertexAttribPointer(widthSlot, 1, GL_FLOAT, GL_FALSE, gAAVertexStride, widthCoords);
@@ -1296,7 +1308,6 @@ void OpenGLRenderer::setupDrawAALine(GLvoid* vertices, GLvoid* widthCoords,
 }
 
 void OpenGLRenderer::finishDrawTexture() {
-    glDisableVertexAttribArray(mTexCoordsSlot);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1635,6 +1646,7 @@ void OpenGLRenderer::drawAARect(float left, float top, float right, float bottom
     }
 
     setupDraw();
+    setupDrawNoTexture();
     setupDrawAALine();
     setupDrawColor(color);
     setupDrawColorFilter();
@@ -1745,6 +1757,7 @@ void OpenGLRenderer::drawLines(float* points, int count, SkPaint* paint) {
 
     getAlphaAndMode(paint, &alpha, &mode);
     setupDraw();
+    setupDrawNoTexture();
     if (isAA) {
         setupDrawAALine();
     }
@@ -1954,6 +1967,7 @@ void OpenGLRenderer::drawPoints(float* points, int count, SkPaint* paint) {
     TextureVertex* vertex = &pointsData[0];
 
     setupDraw();
+    setupDrawNoTexture();
     setupDrawPoint(strokeWidth);
     setupDrawColor(paint->getColor(), alpha);
     setupDrawColorFilter();
@@ -2194,13 +2208,6 @@ void OpenGLRenderer::drawText(const char* text, int bytesCount, int count,
     bool hasActiveLayer = false;
 #endif
 
-    float* buffer = fontRenderer.getMeshBuffer();
-    int offset = fontRenderer.getMeshTexCoordsOffset();
-
-    bool force = mCaches.unbindMeshBuffer();
-    mCaches.bindPositionVertexPointer(force, mCaches.currentProgram->position, buffer);
-    mCaches.bindTexCoordsVertexPointer(force, mTexCoordsSlot, buffer + offset);
-
     if (fontRenderer.renderText(paint, clip, text, 0, bytesCount, count, x, y,
             hasActiveLayer ? &bounds : NULL)) {
 #if RENDER_LAYERS_AS_REGIONS
@@ -2212,9 +2219,6 @@ void OpenGLRenderer::drawText(const char* text, int bytesCount, int count,
         }
 #endif
     }
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArray(mCaches.currentProgram->texCoords);
 
     drawTextDecorations(text, bytesCount, length, oldX, oldY, paint);
 }
@@ -2445,6 +2449,7 @@ void OpenGLRenderer::drawColorRect(float left, float top, float right, float bot
     }
 
     setupDraw();
+    setupDrawNoTexture();
     setupDrawColor(color);
     setupDrawShader();
     setupDrawColorFilter();
