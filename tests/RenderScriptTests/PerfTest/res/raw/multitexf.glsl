@@ -10,4 +10,3 @@ void main() {
    col0.w = 0.5;
    gl_FragColor = col0;
 }
-
