@@ -1220,13 +1220,13 @@ void OpenGLRenderer::setupDrawSimpleMesh() {
 
 void OpenGLRenderer::setupDrawTexture(GLuint texture) {
     bindTexture(texture);
-    glUniform1i(mCaches.currentProgram->getUniform("sampler"), mTextureUnit++);
+    mTextureUnit++;
     mCaches.enableTexCoordsVertexArray();
 }
 
 void OpenGLRenderer::setupDrawExternalTexture(GLuint texture) {
     bindExternalTexture(texture);
-    glUniform1i(mCaches.currentProgram->getUniform("sampler"), mTextureUnit++);
+    mTextureUnit++;
     mCaches.enableTexCoordsVertexArray();
 }
 
@@ -2135,6 +2135,8 @@ void OpenGLRenderer::drawText(const char* text, int bytesCount, int count,
     getAlphaAndMode(paint, &alpha, &mode);
 
     if (mHasShadow) {
+        mCaches.activeTexture(0);
+
         mCaches.dropShadowCache.setFontRenderer(fontRenderer);
         const ShadowTexture* shadow = mCaches.dropShadowCache.get(
                 paint, text, bytesCount, count, mShadowRadius);
@@ -2149,7 +2151,6 @@ void OpenGLRenderer::drawText(const char* text, int bytesCount, int count,
             shadowColor = 0xffffffff;
         }
 
-        mCaches.activeTexture(0);
         setupDraw();
         setupDrawWithTexture(true);
         setupDrawAlpha8Color(shadowColor, shadowAlpha < 255 ? shadowAlpha : alpha);
@@ -2165,8 +2166,6 @@ void OpenGLRenderer::drawText(const char* text, int bytesCount, int count,
         setupDrawMesh(NULL, (GLvoid*) gMeshTextureOffset);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, gMeshCount);
-
-        finishDrawTexture();
     }
 
     if (paint->getAlpha() == 0 && paint->getXfermode() == NULL) {
