@@ -2497,7 +2497,7 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
                         + mPreferredApn.numeric + ":" + mPreferredApn);
                 }
                 if ((mPreferredApn.numeric.equals(operator) && mPreferredApn.canHandleType(requestedApnType)) &&
-                    (mPreferredApn.bearer == 0 || mPreferredApn.bearer == radioTech) && 
+                    (mPreferredApn.bearer == 0 || mPreferredApn.bearer == radioTech) &&
                     !apnList.contains(mPreferredApn))
                 {
                     apnList.add(mPreferredApn);
