@@ -827,6 +827,7 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
             notifyOffApnsOfAvailability(apnContext.getReason());
             return false;
         }
+    }
 
     /**
     * Report on whether data connectivity can be setup for any APN.
