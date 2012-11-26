@@ -225,6 +225,7 @@ public class LoadAverageService extends Service {
                     y, mLoadPaint);
 
 /* display IOWait only instead of processes */
+/*
             int N = stats.countWorkingStats();
             for (int i=0; i<N; i++) {
                 Stats.Stats st = stats.getWorkingStats(i);
