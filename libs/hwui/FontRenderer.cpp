@@ -454,6 +454,7 @@ void FontRenderer::flushLargeCaches() {
     deallocateTextureMemory(mCacheTexture256);
     deallocateTextureMemory(mCacheTexture512);
 }
+
 void FontRenderer::allocateTextureMemory(CacheTexture *cacheTexture) {
     int width = cacheTexture->mWidth;
     int height = cacheTexture->mHeight;
