@@ -79,7 +79,7 @@ public class ViewConfiguration {
      * Defines the default duration in milliseconds before a press turns into
      * a long press
      */
-    private static final int DEFAULT_LONG_PRESS_TIMEOUT = 500;
+    private static final int DEFAULT_LONG_PRESS_TIMEOUT = 450;
 
     /**
      * Defines the time between successive key repeats in milliseconds.
@@ -91,14 +91,14 @@ public class ViewConfiguration {
      * appropriate button to bring up the global actions dialog (power off,
      * lock screen, etc).
      */
-    private static final int GLOBAL_ACTIONS_KEY_TIMEOUT = 500;
+    private static final int GLOBAL_ACTIONS_KEY_TIMEOUT = 450;
     
     /**
      * Defines the duration in milliseconds we will wait to see if a touch event
      * is a tap or a scroll. If the user does not move within this interval, it is
      * considered to be a tap.
      */
-    private static final int TAP_TIMEOUT = 180;
+    private static final int TAP_TIMEOUT = 175;
     
     /**
      * Defines the duration in milliseconds we will wait to see if a touch event 
@@ -132,12 +132,12 @@ public class ViewConfiguration {
      * Defines the duration in milliseconds we want to display zoom controls in response 
      * to a user panning within an application.
      */
-    private static final int ZOOM_CONTROLS_TIMEOUT = 3000;
+    private static final int ZOOM_CONTROLS_TIMEOUT = 2800;
 
     /**
      * Inset in pixels to look for touchable content when the user touches the edge of the screen
      */
-    private static final int EDGE_SLOP = 12;
+    private static final int EDGE_SLOP = 10;
     
     /**
      * Distance a touch can wander before we think the user is scrolling in dips.
@@ -187,7 +187,7 @@ public class ViewConfiguration {
      * Maximum velocity to initiate a fling, as measured in pixels per second
      */
     private static final int MAXIMUM_FLING_VELOCITY
-            = SystemProperties.getInt("ro.max.fling_velocity", 10000);
+            = SystemProperties.getInt("ro.max.fling_velocity", 12000);
 
     /**
      * Distance between a touch up event denoting the end of a touch exploration
@@ -209,12 +209,13 @@ public class ViewConfiguration {
      * should be at least equal to the size of the screen in ARGB888 format.
      */
     @Deprecated
-    private static final int MAXIMUM_DRAWING_CACHE_SIZE = 480 * 800 * 4; // ARGB8888
+    private static final int MAXIMUM_DRAWING_CACHE_SIZE = 480 * 854 * 4; // ARGB8888
 
     /**
      * The coefficient of friction applied to flings/scrolls.
      */
-    private static final float SCROLL_FRICTION = 0.015f;
+    private static final float SCROLL_FRICTION 
+            = SystemProperties.getInt("ro.scroll_friction", 0.011f) ;
 
     /**
      * Max distance to overscroll for edge effects
