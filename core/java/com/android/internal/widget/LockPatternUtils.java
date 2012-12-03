@@ -1205,24 +1205,6 @@ public class LockPatternUtils {
         android.provider.Settings.Secure.putLong(mContentResolver, secureSettingKey, value);
     }
 
-    private int getInteger(String secureSettingKey, int defaultValue) {
-        try {
-            return getLockSettings().getInteger(secureSettingKey, defaultValue,
-                    getCurrentOrCallingUserId());
-        } catch (RemoteException re) {
-            return defaultValue;
-        }
-    }
-
-    private void setInteger(String secureSettingKey, int value) {
-        try {
-            getLockSettings().setInteger(secureSettingKey, value, getCurrentOrCallingUserId());
-        } catch (RemoteException re) {
-            // What can we do?
-            Log.e(TAG, "Couldn't write boolean " + secureSettingKey + re);
-        }
-    }
-
     private String getString(String secureSettingKey) {
         return android.provider.Settings.Secure.getString(mContentResolver, secureSettingKey);
     }
