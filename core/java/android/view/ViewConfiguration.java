@@ -214,8 +214,7 @@ public class ViewConfiguration {
     /**
      * The coefficient of friction applied to flings/scrolls.
      */
-    private static final float SCROLL_FRICTION 
-            = SystemProperties.getInt("ro.scroll_friction", 0.011f) ;
+    private static final float SCROLL_FRICTION = 0.011f;
 
     /**
      * Max distance to overscroll for edge effects
